@@ -1,5 +1,3 @@
-Here is the cleaned and properly formatted `README.md`, with the broken Markdown, duplicated labels, and `[cite: 12]` artifacts removed.
-
 # AI Security Vendor Directory - Frontend UI
 
 **Live Demo:** [https://vendor-directory-web.vercel.app/](https://vendor-directory-web.vercel.app/)
