@@ -1,20 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Edit2, RefreshCw, X, Save } from 'lucide-react';
-
-interface Vendor {
-  id: string;
-  name: string;
-  website: string | null;
-  description: string | null;
-}
+import { useState, useEffect } from 'react';
+import { Search, Loader2 } from 'lucide-react';
+import { Header } from './components/Header';
+import { VendorCard } from './components/VendorCard';
+import type { Vendor } from './types/vendor';
 
 export default function App() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Vendor>>({});
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -32,7 +28,6 @@ export default function App() {
     }
   };
 
-  // Debounce the search input
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchVendors(searchTerm);
@@ -44,118 +39,80 @@ export default function App() {
     setRefreshingId(id);
     try {
       const res = await fetch(`${API_URL}/vendors/${id}/refresh`, { method: 'POST' });
-      if (!res.ok) throw new Error('Refresh failed');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Request failed with status ${res.status}`);
+      }
       const updatedVendor = await res.json();
       setVendors(vendors.map(v => v.id === id ? updatedVendor : v));
-    } catch (error) {
-      alert('Failed to refresh data from source.');
+    } catch (error: any) {
+      alert(`Failed to refresh: ${error.message}`);
     } finally {
       setRefreshingId(null);
     }
   };
 
-  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!editingId) return;
-    
+  const handleUpdate = async (id: string, data: Partial<Vendor>) => {
+    setIsUpdating(true);
     try {
-      const res = await fetch(`${API_URL}/vendors/${editingId}`, {
+      const res = await fetch(`${API_URL}/vendors/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error('Update failed');
       
-      fetchVendors(searchTerm);
+      await fetchVendors(searchTerm);
       setEditingId(null);
     } catch (error) {
       alert('Failed to update vendor.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  const startEdit = (vendor: Vendor) => {
-    setEditingId(vendor.id);
-    setEditForm(vendor);
-  };
-
   return (
-    <div className="max-w-5xl mx-auto p-6 text-slate-800">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">AI Security Vendor Directory</h1>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search vendors..."
-            className="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50/50 pb-12 text-slate-800 font-sans tracking-tight">
+      <div className="max-w-5xl mx-auto p-6 md:p-8">
+        <Header searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
-      {loading && vendors.length === 0 ? (
-        <p className="text-center text-slate-500">Loading vendors...</p>
-      ) : (
-        <div className="grid gap-4">
-          {vendors.map((vendor) => (
-            <div key={vendor.id} className="border rounded-xl p-5 bg-white shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start transition-all hover:shadow-md">
-              {editingId === vendor.id ? (
-                <form onSubmit={handleUpdate} className="flex-1 w-full space-y-3">
-                  <input
-                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={editForm.name || ''}
-                    onChange={e => setEditForm({...editForm, name: e.target.value})}
-                    required
-                  />
-                  <input
-                    className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={editForm.website || ''}
-                    onChange={e => setEditForm({...editForm, website: e.target.value})}
-                    placeholder="Website URL"
-                  />
-                  <textarea
-                    className="w-full border p-2 rounded h-24 focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={editForm.description || ''}
-                    onChange={e => setEditForm({...editForm, description: e.target.value})}
-                  />
-                  <div className="flex gap-2">
-                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 text-sm hover:bg-blue-700 font-medium">
-                      <Save className="w-4 h-4" /> Save
-                    </button>
-                    <button type="button" onClick={() => setEditingId(null)} className="bg-slate-100 text-slate-700 px-4 py-2 rounded flex items-center gap-2 text-sm hover:bg-slate-200 font-medium">
-                      <X className="w-4 h-4" /> Cancel
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-slate-900">{vendor.name}</h2>
-                    {vendor.website && (
-                      <a href={vendor.website.startsWith('http') ? vendor.website : `https://cybersectools.com${vendor.website}`} target="_blank" rel="noreferrer" className="text-blue-600 text-sm hover:underline font-medium mt-1 inline-block">
-                        {vendor.website}
-                      </a>
-                    )}
-                    <p className="mt-3 text-slate-600 text-sm leading-relaxed">{vendor.description}</p>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => startEdit(vendor)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit">
-                      <Edit2 className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => handleRefresh(vendor.id)} disabled={refreshingId === vendor.id} className={`p-2 rounded transition-colors ${refreshingId === vendor.id ? 'text-blue-500' : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'}`} title="Refresh from live source">
-                      <RefreshCw className={`w-5 h-5 ${refreshingId === vendor.id ? 'animate-spin' : ''}`} />
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-          {vendors.length === 0 && !loading && (
-            <p className="text-center text-slate-500 py-8">No vendors match your search.</p>
-          )}
-        </div>
-      )}
+        {loading && vendors.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            <p className="font-medium">Loading vendors...</p>
+          </div>
+        ) : (
+          <div className="grid gap-5">
+            {vendors.map((vendor) => (
+              <VendorCard
+                key={vendor.id}
+                vendor={vendor}
+                isEditing={editingId === vendor.id}
+                isUpdating={isUpdating}
+                isRefreshing={refreshingId === vendor.id}
+                onEditStart={() => setEditingId(vendor.id)}
+                onEditCancel={() => setEditingId(null)}
+                onSave={handleUpdate}
+                onRefresh={handleRefresh}
+              />
+            ))}
+            
+            {vendors.length === 0 && !loading && (
+              <div className="text-center py-24 bg-white border border-slate-200 border-dashed rounded-2xl">
+                <Search className="w-10 h-10 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-bold text-slate-900 mb-1">No vendors found</h3>
+                <p className="text-slate-500">We couldn't find anything matching "{searchTerm}".</p>
+                <button 
+                  onClick={() => setSearchTerm('')}
+                  className="mt-4 text-blue-600 font-medium hover:underline"
+                >
+                  Clear search
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

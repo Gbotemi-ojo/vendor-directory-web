@@ -1,11 +1,12 @@
-Here’s the cleaned-up, properly formatted `README.md` for the frontend repository. You can copy everything inside the code block directly into `README.md`.
+Here is the cleaned and properly formatted `README.md`, with the broken Markdown, duplicated labels, and `[cite: 12]` artifacts removed.
 
-````markdown
 # AI Security Vendor Directory - Frontend UI
+
+**Live Demo:** [https://vendor-directory-web.vercel.app/](https://vendor-directory-web.vercel.app/)
 
 A responsive, high-performance React Single Page Application (SPA) built to interface with the **AI Security Vendor Directory API**.
 
-It features real-time debounced searching, inline editing, live data refreshing, and component-level test coverage.
+It features real-time debounced searching, inline editing, and live data refreshing.
 
 ---
 
@@ -13,8 +14,8 @@ It features real-time debounced searching, inline editing, live data refreshing,
 
 ### Prerequisites
 
-- Node.js (v18 or higher) installed locally.
-- The backend API running locally or deployed to Vercel.
+* Node.js (v18 or higher) installed locally.
+* The backend API running locally or deployed to Vercel.
 
 ### Setup Steps
 
@@ -23,7 +24,7 @@ It features real-time debounced searching, inline editing, live data refreshing,
 ```bash
 git clone https://github.com/Gbotemi-ojo/vendor-directory-web.git
 cd vendor-directory-web
-````
+```
 
 #### 2. Install Dependencies
 
@@ -36,7 +37,7 @@ npm install
 Create a `.env` file in the root directory and point it to your backend API:
 
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=https://vendor-directory-api.vercel.app/api
 ```
 
 #### 4. Run the Application
@@ -57,12 +58,6 @@ npm run build
 
 ```bash
 npm run preview
-```
-
-**Run tests:**
-
-```bash
-npm test
 ```
 
 ---
@@ -91,17 +86,15 @@ Provides a clean, modern, lightweight icon set for common UI actions such as:
 * Refresh
 * Loading states
 
-### Vitest & React Testing Library
-
-Vitest provides fast test execution while React Testing Library focuses on testing components through user-facing DOM behavior.
-
-The test environment uses `jsdom` to simulate browser APIs during component tests.
-
 ---
 
 ## 3. What Was Built vs. Left Out
 
 ### What Was Built
+
+#### Modular Component Architecture
+
+Refactored into a scalable structure with specific files for types (`vendor.ts`) and modular UI components (`Header.tsx`, `VendorCard.tsx`, `VendorForm.tsx`).
 
 #### Interactive Vendor Dashboard
 
@@ -117,19 +110,13 @@ A **300ms debounce** is used to prevent excessive API requests while the user is
 
 Users can modify vendor attributes directly through the UI and persist those changes through the backend API.
 
+Includes disabled states and animated loading spinners during submissions.
+
 #### Live Refresh Trigger
 
 Each vendor provides an interactive refresh action that calls the backend scraping/refresh endpoint.
 
 The UI displays a loading state while the refresh operation is in progress.
-
-#### Component Testing Suite
-
-Automated component tests verify core UI behavior, including:
-
-* Header rendering
-* Search input availability
-* Basic component rendering
 
 ### What Was Left Out
 
@@ -179,7 +166,7 @@ Client-side filtering is simple and fast for small datasets. However, delegating
 
 The frontend does not need to download the entire vendor dataset simply to perform a search.
 
-The trade-off is additional network dependency during searches, which is mitigated by the 300ms debounce to avoid sending a request for every individual keystroke.
+The trade-off is additional network dependency during searches, which is mitigated by the **300ms debounce** to avoid sending a request for every individual keystroke.
 
 ---
 
@@ -187,17 +174,7 @@ The trade-off is additional network dependency during searches, which is mitigat
 
 The application was verified through a multi-tiered approach.
 
-### 1. Automated Component Tests
-
-The test suite is executed using:
-
-```bash
-npm test
-```
-
-Vitest and React Testing Library are used to verify that core components render correctly and that important UI elements are available.
-
-### 2. Production Build Validation
+### 1. Production Build Validation
 
 The production build was validated using:
 
@@ -207,7 +184,7 @@ npm run build
 
 This verifies TypeScript compilation and the Vite production build pipeline.
 
-### 3. Manual End-to-End Checks
+### 2. Manual End-to-End Checks
 
 The application was manually tested against the running backend API to verify:
 
@@ -250,16 +227,17 @@ This could provide:
 
 AI assistance was used to help:
 
-* Scaffold the initial React component structure
-* Resolve React 19 / Vite testing configuration issues
-* Configure `vite.config.ts`
+* Scaffold the initial React component structure.
+* Refactor monolithic components into a modular architecture (`Header`, `VendorCard`, `VendorForm`).
+* Implement improved Tailwind CSS styling and loading states.
+* Configure `vite.config.ts`.
 * Align TypeScript event typing, including:
 
 ```typescript
 React.FormEvent<HTMLFormElement>
 ```
 
-* Improve implementation and documentation structure
+* Improve implementation and documentation structure.
 
 ### How It Was Checked
 
@@ -275,9 +253,6 @@ npm run build
 
 This was used to ensure there were no TypeScript compilation or production build errors.
 
-
-This was used to verify the health of the component test suite.
-
 #### Manual Browser Validation
 
 The application was also tested manually in the browser to verify the actual user experience.
@@ -286,8 +261,11 @@ The application was also tested manually in the browser to verify the actual use
 
 ## 📄 Repository
 
-Frontend repository:
+**Frontend repository:**
 
 [https://github.com/Gbotemi-ojo/vendor-directory-web](https://github.com/Gbotemi-ojo/vendor-directory-web)
 
-```
+**Live Demo:**
+
+[https://vendor-directory-web.vercel.app/](https://vendor-directory-web.vercel.app/)
+
