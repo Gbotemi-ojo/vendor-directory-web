@@ -1,75 +1,293 @@
-# React + TypeScript + Vite
+Here’s the cleaned-up, properly formatted `README.md` for the frontend repository. You can copy everything inside the code block directly into `README.md`.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+````markdown
+# AI Security Vendor Directory - Frontend UI
 
-Currently, two official plugins are available:
+A responsive, high-performance React Single Page Application (SPA) built to interface with the **AI Security Vendor Directory API**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+It features real-time debounced searching, inline editing, live data refreshing, and component-level test coverage.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 1. How to Run the Application
 
-## Expanding the ESLint configuration
+### Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js (v18 or higher) installed locally.
+- The backend API running locally or deployed to Vercel.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Setup Steps
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+#### 1. Clone the Repository
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/Gbotemi-ojo/vendor-directory-web.git
+cd vendor-directory-web
+````
 
+#### 2. Install Dependencies
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+#### 3. Configure Environment Variables
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Create a `.env` file in the root directory and point it to your backend API:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+#### 4. Run the Application
+
+**Development mode:**
+
+```bash
+npm run dev
+```
+
+**Production build:**
+
+```bash
+npm run build
+```
+
+**Preview the production build:**
+
+```bash
+npm run preview
+```
+
+**Run tests:**
+
+```bash
+npm test
+```
+
+---
+
+## 2. Tech Stack and Why
+
+### Vite & React (TypeScript)
+
+Chosen for fast Hot Module Replacement (HMR), efficient production builds, and TypeScript's strict type safety.
+
+This combination provides a lightweight development experience while helping prevent common runtime state and event-handling bugs.
+
+### Tailwind CSS v4
+
+Selected for rapid utility-first styling without relying on a large external component library.
+
+It provides full control over custom vendor cards, forms, responsive layouts, spacing, typography, and UI states.
+
+### Lucide React
+
+Provides a clean, modern, lightweight icon set for common UI actions such as:
+
+* Search
+* Edit
+* Save
+* Refresh
+* Loading states
+
+### Vitest & React Testing Library
+
+Vitest provides fast test execution while React Testing Library focuses on testing components through user-facing DOM behavior.
+
+The test environment uses `jsdom` to simulate browser APIs during component tests.
+
+---
+
+## 3. What Was Built vs. Left Out
+
+### What Was Built
+
+#### Interactive Vendor Dashboard
+
+A clean card-based interface that renders vendor records retrieved from the backend API.
+
+#### Debounced Search Interface
+
+Real-time keyword searching across vendor names and descriptions.
+
+A **300ms debounce** is used to prevent excessive API requests while the user is typing.
+
+#### Inline Editing Modal/Form
+
+Users can modify vendor attributes directly through the UI and persist those changes through the backend API.
+
+#### Live Refresh Trigger
+
+Each vendor provides an interactive refresh action that calls the backend scraping/refresh endpoint.
+
+The UI displays a loading state while the refresh operation is in progress.
+
+#### Component Testing Suite
+
+Automated component tests verify core UI behavior, including:
+
+* Header rendering
+* Search input availability
+* Basic component rendering
+
+### What Was Left Out
+
+#### Pagination / Infinite Scroll
+
+Pagination and infinite scrolling were omitted because the current dataset is small enough to render efficiently in a single scrollable view.
+
+The backend search structure can be extended to support pagination if the dataset grows significantly.
+
+#### Advanced Analytics / Charts
+
+Advanced analytics and visualization were not implemented because the core requirements focus on vendor discovery, search, editing, and live data refreshing.
+
+---
+
+## 4. Key Decision, Alternative Considered, and Trade-off
+
+### Decision
+
+Search filtering is performed by the backend through query parameters, with frontend debouncing used to control request frequency.
+
+```text
+User Input
+    ↓
+300ms Debounce
+    ↓
+API Request
+    ↓
+Backend Search
+    ↓
+Filtered Vendor Results
+    ↓
+UI Update
+```
+
+### Alternative Considered
+
+Fetch all vendors once when the application loads and perform filtering entirely on the client using:
+
+```typescript
+Array.prototype.filter()
+```
+
+### Why This Approach Was Chosen
+
+Client-side filtering is simple and fast for small datasets. However, delegating search to the backend provides a more scalable architecture as the number of vendors increases.
+
+The frontend does not need to download the entire vendor dataset simply to perform a search.
+
+The trade-off is additional network dependency during searches, which is mitigated by the 300ms debounce to avoid sending a request for every individual keystroke.
+
+---
+
+## 5. Verification Strategy
+
+The application was verified through a multi-tiered approach.
+
+### 1. Automated Component Tests
+
+The test suite is executed using:
+
+```bash
+npm test
+```
+
+Vitest and React Testing Library are used to verify that core components render correctly and that important UI elements are available.
+
+### 2. Production Build Validation
+
+The production build was validated using:
+
+```bash
+npm run build
+```
+
+This verifies TypeScript compilation and the Vite production build pipeline.
+
+### 3. Manual End-to-End Checks
+
+The application was manually tested against the running backend API to verify:
+
+* Vendor data loading
+* Search responsiveness
+* Search debouncing
+* Inline editing
+* Form submission
+* Live vendor refresh
+* Loading states
+* Frontend/backend integration
+
+---
+
+## 6. Known Limitation and Future Improvements
+
+### Known Limitation
+
+If the backend API becomes unavailable or experiences high latency, the UI currently falls back to generic error alerts rather than providing a dedicated offline or degraded-network experience.
+
+### Future Improvement
+
+Introduce a robust client-side data-fetching and caching layer such as **TanStack Query**.
+
+This could provide:
+
+* Automatic background refetching
+* Request caching
+* Query invalidation
+* Retry handling
+* Optimistic UI updates
+* Improved loading and error states
+* Better synchronization after vendor updates
+
+---
+
+## 7. AI Assistance & Code Validation
+
+### Where AI Was Used
+
+AI assistance was used to help:
+
+* Scaffold the initial React component structure
+* Resolve React 19 / Vite testing configuration issues
+* Configure `vite.config.ts`
+* Align TypeScript event typing, including:
+
+```typescript
+React.FormEvent<HTMLFormElement>
+```
+
+* Improve implementation and documentation structure
+
+### How It Was Checked
+
+AI-assisted code was reviewed and validated against the actual application.
+
+The implementation was verified through:
+
+#### Production Build
+
+```bash
+npm run build
+```
+
+This was used to ensure there were no TypeScript compilation or production build errors.
+
+
+This was used to verify the health of the component test suite.
+
+#### Manual Browser Validation
+
+The application was also tested manually in the browser to verify the actual user experience.
+
+---
+
+## 📄 Repository
+
+Frontend repository:
+
+[https://github.com/Gbotemi-ojo/vendor-directory-web](https://github.com/Gbotemi-ojo/vendor-directory-web)
 
 ```
