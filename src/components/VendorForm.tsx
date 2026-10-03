@@ -19,6 +19,7 @@ export function VendorForm({ vendor, isUpdating, onSave, onCancel }: VendorFormP
 
   return (
     <form onSubmit={handleSubmit} className="flex-1 w-full space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      
       <div>
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">
           <Building2 className="w-3.5 h-3.5" /> Vendor Name
@@ -31,6 +32,7 @@ export function VendorForm({ vendor, isUpdating, onSave, onCancel }: VendorFormP
           required
         />
       </div>
+
       <div>
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">
           <Globe className="w-3.5 h-3.5" /> Website URL
@@ -43,6 +45,7 @@ export function VendorForm({ vendor, isUpdating, onSave, onCancel }: VendorFormP
           placeholder="https://example.com"
         />
       </div>
+
       <div>
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">
           <AlignLeft className="w-3.5 h-3.5" /> Description
@@ -54,6 +57,7 @@ export function VendorForm({ vendor, isUpdating, onSave, onCancel }: VendorFormP
           onChange={e => setFormData({ ...formData, description: e.target.value })}
         />
       </div>
+
       <div className="flex items-center gap-3 pt-2">
         <button
           type="submit"
