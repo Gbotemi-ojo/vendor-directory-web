@@ -14,7 +14,15 @@ export function VendorForm({ vendor, isUpdating, onSave, onCancel }: VendorFormP
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(vendor.id, formData);
+    
+    // 1. Destructure out the 'id' so it is not sent in the PUT body
+    const { id, ...dataToSend } = formData;
+
+    // 2. Convert empty strings to null so Zod's .url() validation doesn't fail
+    if (dataToSend.website === '') dataToSend.website = null;
+    if (dataToSend.description === '') dataToSend.description = null;
+
+    onSave(vendor.id, dataToSend);
   };
 
   return (
@@ -76,6 +84,7 @@ export function VendorForm({ vendor, isUpdating, onSave, onCancel }: VendorFormP
           <X className="w-4 h-4" /> Cancel
         </button>
       </div>
+
     </form>
   );
 }
