@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
 import { Save, X, Loader2, Building2, Globe, AlignLeft } from 'lucide-react';
+import type { VendorFormProps } from '../types/components';
 import type { Vendor } from '../types/vendor';
-
-interface VendorFormProps {
-  vendor: Vendor;
-  isUpdating: boolean;
-  onSave: (id: string, data: Partial<Vendor>) => void;
-  onCancel: () => void;
-}
 
 export function VendorForm({ vendor, isUpdating, onSave, onCancel }: VendorFormProps) {
   const [formData, setFormData] = useState<Partial<Vendor>>(vendor);
@@ -84,7 +78,6 @@ export function VendorForm({ vendor, isUpdating, onSave, onCancel }: VendorFormP
           <X className="w-4 h-4" /> Cancel
         </button>
       </div>
-
     </form>
   );
 }

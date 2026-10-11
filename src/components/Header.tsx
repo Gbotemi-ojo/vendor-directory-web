@@ -1,9 +1,5 @@
 import { Search } from 'lucide-react';
-
-interface HeaderProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-}
+import type { HeaderProps } from '../types/components';
 
 export function Header({ searchTerm, onSearchChange }: HeaderProps) {
   return (

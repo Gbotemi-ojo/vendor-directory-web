@@ -1,17 +1,6 @@
 import { Edit2, RefreshCw, Globe } from 'lucide-react';
 import { VendorForm } from './VendorForm';
-import type { Vendor } from '../types/vendor';
-
-interface VendorCardProps {
-  vendor: Vendor;
-  isEditing: boolean;
-  isUpdating: boolean;
-  isRefreshing: boolean;
-  onEditStart: () => void;
-  onEditCancel: () => void;
-  onSave: (id: string, data: Partial<Vendor>) => void;
-  onRefresh: (id: string) => void;
-}
+import type { VendorCardProps } from '../types/components';
 
 export function VendorCard({ vendor, isEditing, isUpdating, isRefreshing, onEditStart, onEditCancel, onSave, onRefresh }: VendorCardProps) {
   return (
@@ -43,7 +32,6 @@ export function VendorCard({ vendor, isEditing, isUpdating, isRefreshing, onEdit
               {vendor.description || <span className="italic text-slate-400">No description provided.</span>}
             </p>
           </div>
-
           <div className="flex md:flex-col gap-2 shrink-0 bg-slate-50/80 p-1.5 rounded-xl border border-slate-100">
             <button
               onClick={onEditStart}

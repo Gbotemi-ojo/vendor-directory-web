@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { VendorCard } from './components/VendorCard';
-import type { Vendor } from './types/vendor';
+import type { Vendor, PaginatedVendorResponse } from './types/vendor';
 
 export default function App() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -21,12 +21,13 @@ export default function App() {
     setLoading(true);
     try {
       const params = new URLSearchParams({ search, page: String(page) });
-      const res = await fetch(`${API_URL}/vendors?${params}`);
+      const res = await fetch(`${API_URL}/vendors?${params}`, {
+        cache: 'no-store'
+      });
       if (!res.ok) {
         throw new Error(`Request failed with status ${res.status}`);
       }
-
-      const result: { data: Vendor[]; meta: { totalPages: number } } = await res.json();
+      const result: PaginatedVendorResponse = await res.json();
       setVendors(result.data);
       setTotalPages(result.meta.totalPages);
     } catch (error) {
@@ -55,7 +56,7 @@ export default function App() {
     return () => clearTimeout(fetchTimeout);
   }, [currentPage, debouncedSearchTerm, fetchVendors]);
 
-const handleRefresh = async (id: string) => {
+  const handleRefresh = async (id: string) => {
     setRefreshingId(id);
     try {
       const res = await fetch(`${API_URL}/vendors/${id}/refresh`, { method: 'POST' });
@@ -71,7 +72,6 @@ const handleRefresh = async (id: string) => {
       
       // Re-fetch the entire list to pull the newly updated data
       await fetchVendors(currentPage, debouncedSearchTerm);
-
     } catch (error: any) {
       alert(`Failed to refresh: ${error.message}`);
     } finally {
@@ -80,7 +80,7 @@ const handleRefresh = async (id: string) => {
     }
   };
 
-const handleUpdate = async (id: string, data: Partial<Vendor>) => {
+  const handleUpdate = async (id: string, data: Partial<Vendor>) => {
     setIsUpdating(true);
     try {
       const res = await fetch(`${API_URL}/vendors/${id}`, {
@@ -90,22 +90,17 @@ const handleUpdate = async (id: string, data: Partial<Vendor>) => {
       });
       
       if (!res.ok) {
-        // Parse the error payload from the backend
         const errData = await res.json().catch(() => ({}));
-        
-        // If Zod returned specific validation details, format them into a string
         if (errData.details && Array.isArray(errData.details)) {
           const messages = errData.details.map((d: any) => `- ${d.path.join('.')}: ${d.message}`).join('\n');
           throw new Error(`Validation Error:\n${messages}`);
         }
-        
         throw new Error(errData.error || 'Update failed');
       }
       
       await fetchVendors(currentPage, debouncedSearchTerm);
       setEditingId(null);
     } catch (error: any) {
-      // Display the actual error message in the alert
       alert(`Failed to update vendor.\n\n${error.message}`);
     } finally {
       setIsUpdating(false);
@@ -116,7 +111,7 @@ const handleUpdate = async (id: string, data: Partial<Vendor>) => {
     <div className="min-h-screen bg-slate-50/50 pb-12 text-slate-800 font-sans tracking-tight">
       <div className="max-w-5xl mx-auto p-6 md:p-8">
         <Header searchTerm={searchTerm} onSearchChange={handleSearchChange} />
-
+        
         {loading && vendors.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
             <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
@@ -153,7 +148,7 @@ const handleUpdate = async (id: string, data: Partial<Vendor>) => {
             )}
           </div>
         )}
-
+        
         <div className="mt-8 flex items-center justify-center gap-4">
           <button
             type="button"

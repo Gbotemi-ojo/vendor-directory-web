@@ -1,269 +1,243 @@
-# AI Security Vendor Directory - Frontend UI
+# AI Security Vendor Directory — Frontend UI
 
 **Live Demo:** [https://vendor-directory-web.vercel.app/](https://vendor-directory-web.vercel.app/)
 
-A responsive, high-performance React Single Page Application (SPA) built to interface with the **AI Security Vendor Directory API**.
-
-It features real-time debounced searching, inline editing, and live data refreshing.
-
----
+A responsive React Single Page Application (SPA) built to interface with the AI Security Vendor Directory API. It provides vendor discovery, debounced searching, inline editing, server-side pagination, and asynchronous data refreshing through a clean, modular user interface.
 
 ## 1. How to Run the Application
 
 ### Prerequisites
 
-* Node.js (v18 or higher) installed locally.
-* The backend API running locally or deployed to Vercel.
+- Node.js v18 or higher
+- npm
+- The backend API running locally or deployed to a hosting provider
 
-### Setup Steps
+### Setup Instructions
 
-#### 1. Clone the Repository
+#### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/Gbotemi-ojo/vendor-directory-web.git
 cd vendor-directory-web
 ```
 
-#### 2. Install Dependencies
+#### Step 2: Install Dependencies
 
 ```bash
 npm install
 ```
 
-#### 3. Configure Environment Variables
+#### Step 3: Configure Environment Variables
 
-Create a `.env` file in the root directory and point it to your backend API:
+Create a `.env` file in the project root directory and configure the backend API URL:
 
 ```env
 VITE_API_URL=https://vendor-directory-api.vercel.app/api
 ```
 
-#### 4. Run the Application
+For local development, use the URL of your locally running backend API:
 
-**Development mode:**
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+Replace the URL with the actual API deployment address if it differs from the examples above.
+
+#### Step 4: Start the Development Server
 
 ```bash
 npm run dev
 ```
 
-**Production build:**
+Vite will display the local development URL in the terminal.
+
+#### Step 5: Build for Production
 
 ```bash
 npm run build
 ```
 
-**Preview the production build:**
+#### Step 6: Preview the Production Build
 
 ```bash
 npm run preview
 ```
 
----
+## 2. Tech Stack and Rationale
 
-## 2. Tech Stack and Why
+### React and TypeScript
 
-### Vite & React (TypeScript)
+React provides a component-based architecture for building interactive user interfaces, while TypeScript introduces static type checking to help catch common errors during development.
 
-Chosen for fast Hot Module Replacement (HMR), efficient production builds, and TypeScript's strict type safety.
+### Vite
 
-This combination provides a lightweight development experience while helping prevent common runtime state and event-handling bugs.
+Vite provides a fast development server, Hot Module Replacement (HMR), and an optimized production build process.
 
 ### Tailwind CSS v4
 
-Selected for rapid utility-first styling without relying on a large external component library.
-
-It provides full control over custom vendor cards, forms, responsive layouts, spacing, typography, and UI states.
+Tailwind CSS provides utility-first styling for building responsive layouts and consistent UI components without requiring a large external component library. It supports custom vendor cards, forms, spacing, typography, and interactive states.
 
 ### Lucide React
 
-Provides a clean, modern, lightweight icon set for common UI actions such as:
+Lucide React provides lightweight, consistent icons for common interface actions, including searching, editing, saving, refreshing, and indicating loading states.
 
-* Search
-* Edit
-* Save
-* Refresh
-* Loading states
+## 3. What Was Built and What Was Left Out
 
----
+### Implemented Features
 
-## 3. What Was Built vs. Left Out
+#### Modular Component and Type Architecture
 
-### What Was Built
+The application separates UI components and TypeScript interfaces into dedicated modules to improve maintainability and reusability.
 
-#### Modular Component Architecture
+The architecture includes centralized type definitions, such as `vendor.ts` and `components.ts`, alongside modular components such as `Header.tsx`, `VendorCard.tsx`, and `VendorForm.tsx`.
 
-Refactored into a scalable structure with specific files for types (`vendor.ts`) and modular UI components (`Header.tsx`, `VendorCard.tsx`, `VendorForm.tsx`).
+#### Vendor Dashboard with Server-Side Pagination
 
-#### Interactive Vendor Dashboard
+The dashboard displays vendor records retrieved from the backend API in a card-based layout.
 
-A clean card-based interface that renders vendor records retrieved from the backend API.
+Pagination is handled through the API, with Previous and Next controls and dynamic page tracking in the frontend.
 
-#### Debounced Search Interface
+#### Debounced Search
 
-Real-time keyword searching across vendor names and descriptions.
+Users can search vendor names and descriptions using a keyword-based search interface.
 
-A **300ms debounce** is used to prevent excessive API requests while the user is typing.
+A 300-millisecond debounce reduces unnecessary API requests while users type. Changing the search query resets pagination to the first page.
 
-#### Inline Editing Modal/Form
+#### Inline Vendor Editing
 
-Users can modify vendor attributes directly through the UI and persist those changes through the backend API.
+Users can update vendor information through an editing form and submit changes to the backend.
 
-Includes disabled states and animated loading spinners during submissions.
+The interface includes loading and disabled states during submission. Empty string values are normalized to `null` where appropriate to support backend validation requirements.
 
-#### Live Refresh Trigger
+#### Asynchronous Vendor Refresh
 
-Each vendor provides an interactive refresh action that calls the backend scraping/refresh endpoint.
+Each vendor includes a refresh action that requests a background scraping job through the backend API.
 
-The UI displays a loading state while the refresh operation is in progress.
+The interface displays a loading state while the refresh operation is processed. After the configured wait period, it refetches vendor data while bypassing the browser's HTTP cache using `cache: 'no-store'`.
 
-### What Was Left Out
+This approach helps the frontend retrieve updated information, although the wait period alone does not guarantee that the background job has completed.
 
-#### Pagination / Infinite Scroll
+### Features Not Implemented
 
-Pagination and infinite scrolling were omitted because the current dataset is small enough to render efficiently in a single scrollable view.
+#### WebSockets or Server-Sent Events (SSE)
 
-The backend search structure can be extended to support pagination if the dataset grows significantly.
+Real-time push notifications for background job completion were not implemented. Instead, the frontend uses a delay before requesting updated vendor data.
 
-#### Advanced Analytics / Charts
+This keeps the frontend integration simple but does not provide an authoritative indication of when a scraping job finishes.
 
-Advanced analytics and visualization were not implemented because the core requirements focus on vendor discovery, search, editing, and live data refreshing.
+#### Advanced Analytics and Charts
 
----
+Advanced analytics, dashboards, and data visualizations were excluded because the core functionality focuses on vendor discovery, searching, editing, and refreshing records.
 
-## 4. Key Decision, Alternative Considered, and Trade-off
+## 4. Key Architectural Decision and Trade-Off
 
-### Decision
+### Decision: Backend-Driven Search and Pagination
 
-Search filtering is performed by the backend through query parameters, with frontend debouncing used to control request frequency.
+Search filtering and pagination are handled by the backend API through query parameters, such as:
 
 ```text
-User Input
-    ↓
-300ms Debounce
-    ↓
-API Request
-    ↓
-Backend Search
-    ↓
-Filtered Vendor Results
-    ↓
-UI Update
+?search=security&page=1&limit=24
 ```
+
+The frontend uses debouncing to reduce the frequency of requests while users type.
 
 ### Alternative Considered
 
-Fetch all vendors once when the application loads and perform filtering entirely on the client using:
-
-```typescript
-Array.prototype.filter()
-```
+Fetch all vendor records when the application loads, then perform filtering and pagination entirely in the browser using JavaScript array methods such as `filter()` and `slice()`.
 
 ### Why This Approach Was Chosen
 
-Client-side filtering is simple and fast for small datasets. However, delegating search to the backend provides a more scalable architecture as the number of vendors increases.
+Client-side filtering and pagination are straightforward for small datasets. However, downloading every vendor record becomes less efficient as the dataset grows.
 
-The frontend does not need to download the entire vendor dataset simply to perform a search.
+Backend-driven filtering and pagination offer several advantages:
 
-The trade-off is additional network dependency during searches, which is mitigated by the **300ms debounce** to avoid sending a request for every individual keystroke.
+- Only the records required for the current page need to be transferred.
+- Database queries handle filtering and pagination.
+- Browser memory usage is reduced for large datasets.
+- The backend remains the central source of truth for vendor data.
+- The frontend can support larger datasets without downloading the entire collection.
 
----
+The main trade-off is the application's dependence on network requests during searches and page navigation. The 300-millisecond debounce helps reduce unnecessary requests, while appropriate database indexing can improve backend query performance.
 
 ## 5. Verification Strategy
 
-The application was verified through a multi-tiered approach.
+The application was verified through production build validation and manual end-to-end testing.
 
-### 1. Production Build Validation
+### Production Build Validation
 
-The production build was validated using:
+Run:
 
 ```bash
 npm run build
 ```
 
-This verifies TypeScript compilation and the Vite production build pipeline.
+This checks the TypeScript compilation and Vite production build process, provided the project's build script includes the relevant checks.
 
-### 2. Manual End-to-End Checks
+### Manual End-to-End Testing
 
-The application was manually tested against the running backend API to verify:
+The frontend was tested in a browser against the running backend API and its separate BullMQ worker process.
 
-* Vendor data loading
-* Search responsiveness
-* Search debouncing
-* Inline editing
-* Form submission
-* Live vendor refresh
-* Loading states
-* Frontend/backend integration
+The verification process covered:
 
----
+- Loading vendor data from the API
+- Server-side pagination and page-state tracking
+- Search responsiveness and debounce behavior
+- Inline editing and form submission
+- Asynchronous vendor refresh requests
+- Cache-bypassing behavior during data refetching
+- Loading states and error handling
+- Frontend and backend integration
 
-## 6. Known Limitation and Future Improvements
+## 6. Known Limitations and Future Improvements
 
-### Known Limitation
+### Known Limitations
 
-If the backend API becomes unavailable or experiences high latency, the UI currently falls back to generic error alerts rather than providing a dedicated offline or degraded-network experience.
+The frontend depends on the backend API being available and responsive.
 
-### Future Improvement
+If the API becomes unavailable, requests experience high latency, or a background scraping job takes longer than the configured wait period, the interface may display a generic error or refetch data before the latest changes are available.
 
-Introduce a robust client-side data-fetching and caching layer such as **TanStack Query**.
+The current refresh workflow does not provide reliable job-completion notifications or continuous polling until a job reaches a terminal state.
 
-This could provide:
+### Future Improvements
 
-* Automatic background refetching
-* Request caching
-* Query invalidation
-* Retry handling
-* Optimistic UI updates
-* Improved loading and error states
-* Better synchronization after vendor updates
+Introduce a dedicated client-side data-fetching and caching solution such as **TanStack Query (React Query)**.
 
----
+Potential benefits include:
 
-## 7. AI Assistance & Code Validation
+- Automatic background refetching and query invalidation
+- Configurable retries for transient network failures
+- Polling for background job status
+- Optimistic UI updates during vendor editing
+- Improved loading, error, and stale-data handling
+- More efficient server-state management
+
+Additional improvements could include more accessible form controls, clearer refresh-status messages, and dedicated UI feedback for failed background jobs.
+
+## 7. AI Assistance and Code Validation
 
 ### Where AI Was Used
 
-AI assistance was used to help:
+AI tools assisted with:
 
-* Scaffold the initial React component structure.
-* Refactor monolithic components into a modular architecture (`Header`, `VendorCard`, `VendorForm`).
-* Implement improved Tailwind CSS styling and loading states.
-* Configure `vite.config.ts`.
-* Align TypeScript event typing, including:
+- Scaffolding the initial React component structure and pagination state logic
+- Refactoring components into a modular architecture
+- Centralizing TypeScript interfaces
+- Implementing browser-cache bypassing for fetch requests
+- Configuring `vite.config.ts`
+- Improving TypeScript event typing and component organization
 
-```typescript
-React.FormEvent<HTMLFormElement>
-```
+### Verification Process
 
-* Improve implementation and documentation structure.
+AI-assisted changes were reviewed against the actual application implementation and validated through the following checks:
 
-### How It Was Checked
+1. **Production Build:** Ran `npm run build` to check TypeScript compilation and production build output.
+2. **Manual Browser Testing:** Tested the application alongside the backend API and background worker.
+3. **Functional Verification:** Checked searching, pagination, editing, loading states, and asynchronous refresh behavior.
+4. **Integration Validation:** Verified that frontend requests and responses aligned with the backend API.
 
-AI-assisted code was reviewed and validated against the actual application.
+AI-generated suggestions were treated as development assistance, with implementation decisions reviewed against the application's expected behavior.
 
-The implementation was verified through:
+## 8. Repository and Live Demo
 
-#### Production Build
-
-```bash
-npm run build
-```
-
-This was used to ensure there were no TypeScript compilation or production build errors.
-
-#### Manual Browser Validation
-
-The application was also tested manually in the browser to verify the actual user experience.
-
----
-
-## 📄 Repository
-
-**Frontend repository:**
-
-[https://github.com/Gbotemi-ojo/vendor-directory-web](https://github.com/Gbotemi-ojo/vendor-directory-web)
-
-**Live Demo:**
-
-[https://vendor-directory-web.vercel.app/](https://vendor-directory-web.vercel.app/)
-
+- **Frontend Repository:** [https://github.com/Gbotemi-ojo/vendor-directory-web](https://github.com/Gbotemi-ojo/vendor-directory-web)
+- **Live Demo:** [https://vendor-directory-web.vercel.app/](https://vendor-directory-web.vercel.app/)
