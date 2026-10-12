@@ -1,7 +1,5 @@
 # AI Security Vendor Directory — Frontend UI
 
-**Live Demo:** [https://vendor-directory-web.vercel.app/](https://vendor-directory-web.vercel.app/)
-
 A responsive React Single Page Application (SPA) built to interface with the AI Security Vendor Directory API. It provides vendor discovery, debounced searching, inline editing, server-side pagination, and asynchronous data refreshing through a clean, modular user interface.
 
 ## 1. How to Run the Application
@@ -30,12 +28,6 @@ npm install
 #### Step 3: Configure Environment Variables
 
 Create a `.env` file in the project root directory and configure the backend API URL:
-
-```env
-VITE_API_URL=https://vendor-directory-api.vercel.app/api
-```
-
-For local development, use the URL of your locally running backend API:
 
 ```env
 VITE_API_URL=http://localhost:5000/api
@@ -237,7 +229,6 @@ AI-assisted changes were reviewed against the actual application implementation 
 
 AI-generated suggestions were treated as development assistance, with implementation decisions reviewed against the application's expected behavior.
 
-## 8. Repository and Live Demo
+## 8. Repository
 
 - **Frontend Repository:** [https://github.com/Gbotemi-ojo/vendor-directory-web](https://github.com/Gbotemi-ojo/vendor-directory-web)
-- **Live Demo:** [https://vendor-directory-web.vercel.app/](https://vendor-directory-web.vercel.app/)

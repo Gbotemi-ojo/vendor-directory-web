@@ -12,13 +12,13 @@ export interface VendorCardProps {
   isRefreshing: boolean;
   onEditStart: () => void;
   onEditCancel: () => void;
-  onSave: (id: string, data: Partial<Vendor>) => void;
+  onSave: (id: string, data: Partial<Vendor>) => Promise<void>;
   onRefresh: (id: string) => void;
 }
 
 export interface VendorFormProps {
   vendor: Vendor;
   isUpdating: boolean;
-  onSave: (id: string, data: Partial<Vendor>) => void;
+  onSave: (id: string, data: Partial<Vendor>) => Promise<void>;
   onCancel: () => void;
 }

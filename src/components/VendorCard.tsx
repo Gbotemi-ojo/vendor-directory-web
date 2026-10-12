@@ -3,6 +3,12 @@ import { VendorForm } from './VendorForm';
 import type { VendorCardProps } from '../types/components';
 
 export function VendorCard({ vendor, isEditing, isUpdating, isRefreshing, onEditStart, onEditCancel, onSave, onRefresh }: VendorCardProps) {
+  const websiteUrl = vendor.website
+    ? /^https?:\/\//i.test(vendor.website)
+      ? vendor.website
+      : `https://${vendor.website}`
+    : null;
+
   return (
     <div
       className={`bg-white border border-slate-200/60 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-6 justify-between items-start transition-all duration-300 ${
@@ -16,9 +22,9 @@ export function VendorCard({ vendor, isEditing, isUpdating, isRefreshing, onEdit
           <div className="flex-1 min-w-0 pr-4">
             <h2 className="text-xl font-bold text-slate-900 truncate mb-1.5">{vendor.name}</h2>
             
-            {vendor.website && (
+            {websiteUrl && (
               <a
-                href={vendor.website.startsWith('http') ? vendor.website : `https://cybersectools.com${vendor.website}`}
+                href={websiteUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-blue-600 text-sm hover:text-blue-700 hover:underline font-medium mt-1 mb-4"

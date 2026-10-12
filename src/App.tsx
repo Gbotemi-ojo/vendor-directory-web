@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import { Header } from './components/Header';
 import { VendorCard } from './components/VendorCard';
@@ -7,33 +7,50 @@ import type { Vendor, PaginatedVendorResponse } from './types/vendor';
 export default function App() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [notice, setNotice] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const fetchController = useRef<AbortController | null>(null);
 
-  const fetchVendors = useCallback(async (page: number, search = '') => {
+  const fetchVendors = useCallback(async (page: number, search: string, signal?: AbortSignal) => {
+    fetchController.current?.abort();
+    const controller = new AbortController();
+    fetchController.current = controller;
+    const abortRequest = () => controller.abort();
+    signal?.addEventListener('abort', abortRequest, { once: true });
     setLoading(true);
     try {
       const params = new URLSearchParams({ search, page: String(page) });
       const res = await fetch(`${API_URL}/vendors?${params}`, {
-        cache: 'no-store'
+        cache: 'no-store',
+        signal: controller.signal,
       });
       if (!res.ok) {
         throw new Error(`Request failed with status ${res.status}`);
       }
       const result: PaginatedVendorResponse = await res.json();
-      setVendors(result.data);
-      setTotalPages(result.meta.totalPages);
+      if (fetchController.current === controller) {
+        setVendors(result.data);
+        setTotalPages(result.meta.totalPages);
+      }
+      return result.data;
     } catch (error) {
-      console.error('Failed to fetch vendors:', error);
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return null;
+      }
+      throw error;
     } finally {
-      setLoading(false);
+      signal?.removeEventListener('abort', abortRequest);
+      if (fetchController.current === controller) {
+        fetchController.current = null;
+        setLoading(false);
+      }
     }
   }, [API_URL]);
 
@@ -43,39 +60,72 @@ export default function App() {
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
-
-  useEffect(() => {
+    const controller = new AbortController();
     const fetchTimeout = setTimeout(() => {
-      fetchVendors(currentPage, debouncedSearchTerm);
-    });
-    return () => clearTimeout(fetchTimeout);
-  }, [currentPage, debouncedSearchTerm, fetchVendors]);
+      fetchVendors(currentPage, searchTerm, controller.signal).catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          setNotice({
+            type: 'error',
+            message: error instanceof Error ? error.message : 'Failed to fetch vendors.',
+          });
+        }
+      });
+    }, 300);
+
+    return () => {
+      clearTimeout(fetchTimeout);
+      controller.abort();
+      fetchController.current?.abort();
+    };
+  }, [currentPage, searchTerm, fetchVendors]);
+
+  useEffect(() => () => fetchController.current?.abort(), []);
 
   const handleRefresh = async (id: string) => {
     setRefreshingId(id);
+    setNotice(null);
     try {
       const res = await fetch(`${API_URL}/vendors/${id}/refresh`, { method: 'POST' });
-      
+
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `Request failed with status ${res.status}`);
+        throw new Error(`Refresh request failed with status ${res.status}`);
       }
-      
-      // The backend now returns a 202 Accepted with a Job ID, not the vendor data.
-      // Wait 10 seconds to give the BullMQ background worker time to scrape and save to the DB.
-      await new Promise(resolve => setTimeout(resolve, 10000));
-      
-      // Re-fetch the entire list to pull the newly updated data
-      await fetchVendors(currentPage, debouncedSearchTerm);
-    } catch (error: any) {
-      alert(`Failed to refresh: ${error.message}`);
+
+      const vendorBeforeRefresh = vendors.find((vendor) => vendor.id === id);
+      if (!vendorBeforeRefresh) {
+        throw new Error('Could not find the vendor to refresh.');
+      }
+
+      let updated = false;
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const refreshedVendors = await fetchVendors(currentPage, searchTerm);
+        if (!refreshedVendors) {
+          continue;
+        }
+        const refreshedVendor = refreshedVendors.find((vendor) => vendor.id === id);
+        if (
+          refreshedVendor &&
+          (refreshedVendor.name !== vendorBeforeRefresh.name ||
+            refreshedVendor.slug !== vendorBeforeRefresh.slug ||
+            refreshedVendor.website !== vendorBeforeRefresh.website ||
+            refreshedVendor.description !== vendorBeforeRefresh.description)
+        ) {
+          updated = true;
+          break;
+        }
+      }
+
+      if (!updated) {
+        throw new Error('The refreshed vendor data was not visible after 10 checks.');
+      }
+      setNotice({ type: 'success', message: 'Vendor data refreshed.' });
+    } catch (error: unknown) {
+      setNotice({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Failed to refresh vendor.',
+      });
     } finally {
-      // Clear the spinning icon
       setRefreshingId(null);
     }
   };
@@ -90,18 +140,21 @@ export default function App() {
       });
       
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        if (errData.details && Array.isArray(errData.details)) {
-          const messages = errData.details.map((d: any) => `- ${d.path.join('.')}: ${d.message}`).join('\n');
-          throw new Error(`Validation Error:\n${messages}`);
+        const errorData: unknown = await res.json().catch(() => null);
+        if (
+          typeof errorData === 'object' &&
+          errorData !== null &&
+          'error' in errorData &&
+          typeof errorData.error === 'string'
+        ) {
+          throw new Error(errorData.error);
         }
-        throw new Error(errData.error || 'Update failed');
+        throw new Error(`Update failed with status ${res.status}`);
       }
-      
-      await fetchVendors(currentPage, debouncedSearchTerm);
+
+      await fetchVendors(currentPage, searchTerm);
       setEditingId(null);
-    } catch (error: any) {
-      alert(`Failed to update vendor.\n\n${error.message}`);
+      setNotice(null);
     } finally {
       setIsUpdating(false);
     }
@@ -111,6 +164,19 @@ export default function App() {
     <div className="min-h-screen bg-slate-50/50 pb-12 text-slate-800 font-sans tracking-tight">
       <div className="max-w-5xl mx-auto p-6 md:p-8">
         <Header searchTerm={searchTerm} onSearchChange={handleSearchChange} />
+
+        {notice && (
+          <div
+            role={notice.type === 'error' ? 'alert' : 'status'}
+            className={`mb-5 rounded-xl border px-4 py-3 text-sm ${
+              notice.type === 'error'
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            }`}
+          >
+            {notice.message}
+          </div>
+        )}
         
         {loading && vendors.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400 space-y-4">
